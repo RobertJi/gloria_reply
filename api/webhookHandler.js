@@ -1,6 +1,11 @@
 export function handleWebhookVerification(req, res) {
   // Your verify token (should match the one you set in Facebook App Dashboard)
   const VERIFY_TOKEN = process.env.FACEBOOK_VERIFY_TOKEN;
+  console.log('Received verification request:');
+  console.log('VERIFY_TOKEN:', VERIFY_TOKEN);
+  console.log('Mode:', req.query['hub.mode']);
+  console.log('Token:', req.query['hub.verify_token']);
+  console.log('Challenge:', req.query['hub.challenge']);
 
   // Parse params from the webhook verification request
   const mode = req.query['hub.mode'];
@@ -15,6 +20,9 @@ export function handleWebhookVerification(req, res) {
       console.log('WEBHOOK_VERIFIED');
       res.status(200).send(challenge);
     } else {
+      console.log('Verification failed:');
+      console.log('Expected token:', VERIFY_TOKEN);
+      console.log('Received token:', token);
       // Responds with '403 Forbidden' if verify tokens do not match
       res.sendStatus(403);
     }
