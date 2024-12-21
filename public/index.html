@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Webhook Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+                <h1 class="text-2xl font-bold text-gray-900">Facebook Webhook Service</h1>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow">
+            <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+                <!-- Introduction -->
+                <div class="bg-white rounded-lg shadow p-6 mb-8">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">About This Service</h2>
+                    <p class="text-gray-600 mb-4">
+                        This is a Node.js service designed to handle Facebook webhook events. It provides endpoints for webhook verification and event processing, making it easy to integrate with Facebook's API.
+                    </p>
+                </div>
+
+                <!-- Endpoints -->
+                <div class="bg-white rounded-lg shadow p-6 mb-8">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Available Endpoints</h2>
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h3 class="font-medium text-gray-900">GET /webhook</h3>
+                            <p class="text-gray-600">Handles Facebook webhook verification</p>
+                        </div>
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <h3 class="font-medium text-gray-900">POST /webhook</h3>
+                            <p class="text-gray-600">Processes incoming Facebook webhook events</p>
+                        </div>
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <h3 class="font-medium text-gray-900">GET /health</h3>
+                            <p class="text-gray-600">Health check endpoint</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Setup Instructions -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Start</h2>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <pre class="text-sm text-gray-700 overflow-x-auto">
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+
+# Start the service
+npm run dev</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+                <p class="text-center text-gray-500 text-sm">
+                    Facebook Webhook Service - A Node.js Implementation
+                </p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html> 
