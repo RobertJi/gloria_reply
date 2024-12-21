@@ -13,11 +13,21 @@
   "routes": [
     {
       "src": "/health",
-      "dest": "api/index.js"
+      "dest": "api/index.js",
+      "methods": ["GET"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET"
+      }
     },
     {
       "src": "/webhook",
-      "dest": "api/index.js"
+      "dest": "api/index.js",
+      "methods": ["GET", "POST"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST"
+      }
     },
     {
       "src": "/(.*)",
