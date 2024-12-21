@@ -37,6 +37,12 @@ export async function analyzeComment(comment) {
       max_tokens: 10
     });
 
+    console.log('Raw OpenAI Response:', JSON.stringify(completion, null, 2));
+    
+    if (!completion.choices || !completion.choices[0] || !completion.choices[0].message) {
+      throw new Error('Invalid response format from OpenAI');
+    }
+
     const decision = completion.choices[0].message.content.trim().toLowerCase();
     console.log('\nGPT Analysis Complete:');
     console.log('Raw Response:', completion.choices[0].message.content);
@@ -47,7 +53,13 @@ export async function analyzeComment(comment) {
   } catch (error) {
     console.error('\n=== GPT Analysis Error ===');
     console.error('Failed to analyze comment:', comment);
-    console.error('Error details:', error.message);
+    console.error('Error details:', error);
+    if (error.response) {
+      console.error('OpenAI Error Response:', {
+        status: error.response.status,
+        data: error.response.data
+      });
+    }
     console.error('Stack:', error.stack);
     console.error('=== End Error ===\n');
     return false; // Default to not hiding on error
