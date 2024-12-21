@@ -1,3 +1,5 @@
+import { analyzeComment, hideComment } from './gptutil.js';
+
 export function handleWebhookVerification(req, res) {
   // Your verify token (should match the one you set in Facebook App Dashboard)
   const VERIFY_TOKEN = process.env.FACEBOOK_VERIFY_TOKEN;
@@ -41,7 +43,7 @@ export function handleWebhookEvent(req, res) {
     body.entry.forEach(function(entry) {
       // Handle comments
       if (entry.changes) {
-        entry.changes.forEach(change => {
+        entry.changes.forEach(async change => {
           if (change.value.item === 'comment') {
             console.log('New comment received:');
             console.log('Post ID:', change.value.post_id);
@@ -50,7 +52,7 @@ export function handleWebhookEvent(req, res) {
             console.log('Commenter:', change.value.from);
             console.log('Created time:', change.value.created_time);
             
-            handleComment(change.value);
+            await handleComment(change.value);
           }
         });
       }
@@ -61,12 +63,28 @@ export function handleWebhookEvent(req, res) {
   }
 }
 
-function handleComment(commentData) {
-  // You can add specific comment handling logic here
+async function handleComment(commentData) {
   console.log('Processing comment:', {
     message: commentData.message,
     commenterId: commentData.from.id,
     commenterName: commentData.from.name,
-    verb: commentData.verb // 'add', 'edit', or 'delete'
+    verb: commentData.verb
   });
+
+  // Only analyze new or edited comments
+  if (commentData.verb === 'add' || commentData.verb === 'edit') {
+    const shouldHide = await analyzeComment(commentData.message);
+    
+    if (shouldHide) {
+      console.log('Comment flagged as harmful, attempting to hide...');
+      const hidden = await hideComment(commentData.post_id, commentData.comment_id);
+      if (hidden) {
+        console.log('Successfully hid harmful comment');
+      } else {
+        console.log('Failed to hide harmful comment');
+      }
+    } else {
+      console.log('Comment appears to be safe');
+    }
+  }
 } 
