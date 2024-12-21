@@ -1,3 +1,4 @@
+import { waitUntil } from '@vercel/functions';
 import { analyzeComment, hideComment } from './gptutil.js';
 
 export function handleWebhookVerification(req, res) {
@@ -34,16 +35,30 @@ export function handleWebhookVerification(req, res) {
 export function handleWebhookEvent(req, res) {
   const body = req.body;
 
-  // Checks if this is an event from a page subscription
   if (body.object === 'page') {
     // Returns a '200 OK' response to all requests
     res.status(200).send('EVENT_RECEIVED');
 
+    // Process webhook data after response is sent
+    if (process.env.VERCEL) {
+      // Use waitUntil for Vercel environment
+      waitUntil(processWebhook(body));
+    } else {
+      // For local development
+      processWebhook(body).catch(console.error);
+    }
+  } else {
+    res.sendStatus(404);
+  }
+}
+
+async function processWebhook(body) {
+  try {
     // Iterates over each entry - there may be multiple if batched
-    body.entry.forEach(function(entry) {
+    for (const entry of body.entry) {
       // Handle comments
       if (entry.changes) {
-        entry.changes.forEach(async change => {
+        for (const change of entry.changes) {
           if (change.value.item === 'comment') {
             console.log('New comment received:');
             console.log('Post ID:', change.value.post_id);
@@ -54,12 +69,11 @@ export function handleWebhookEvent(req, res) {
             
             await handleComment(change.value);
           }
-        });
+        }
       }
-    });
-  } else {
-    // Returns a '404 Not Found' if event is not from a page subscription
-    res.sendStatus(404);
+    }
+  } catch (error) {
+    console.error('Error processing webhook:', error);
   }
 }
 

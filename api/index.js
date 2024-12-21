@@ -7,6 +7,15 @@ import { handleWebhookVerification, handleWebhookEvent } from './webhookHandler.
 
 dotenv.config();
 
+// Log environment variables (but mask sensitive data)
+console.log('\n=== Environment Variables ===');
+console.log('PORT:', process.env.PORT);
+console.log('FACEBOOK_VERIFY_TOKEN:', process.env.FACEBOOK_VERIFY_TOKEN ? '✓ Set' : '✗ Not Set');
+console.log('FACEBOOK_TOKEN:', process.env.FACEBOOK_TOKEN ? '✓ Set' : '✗ Not Set');
+console.log('OPENAI_KEY:', process.env.OPENAI_KEY ? '✓ Set' : '✗ Not Set');
+console.log('COMMENT_PROMPT:', process.env.COMMENT_PROMPT ? '✓ Set' : '✗ Not Set');
+console.log('=== End Environment Variables ===\n');
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
