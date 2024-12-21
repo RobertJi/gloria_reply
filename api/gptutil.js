@@ -1,5 +1,12 @@
 import OpenAI from 'openai';
 
+// Verify OpenAI key is available
+if (!process.env.OPENAI_KEY) {
+  console.error('\n=== Environment Error ===');
+  console.error('OPENAI_KEY is not set in environment variables');
+  console.error('=== End Error ===\n');
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY
 });
@@ -7,6 +14,7 @@ const openai = new OpenAI({
 export async function analyzeComment(comment) {
   try {
     console.log('\n=== Starting GPT Analysis ===');
+    console.log('OpenAI Key Status:', process.env.OPENAI_KEY ? '✓ Available' : '✗ Missing');
     console.log('Analyzing comment:', comment);
     
     const prompt = process.env.COMMENT_PROMPT || `
@@ -49,10 +57,11 @@ export async function analyzeComment(comment) {
 export async function hideComment(postId, commentId) {
   try {
     console.log('\n=== Starting Hide Comment Request ===');
+    console.log('Facebook Token Status:', process.env.FACEBOOK_TOKEN ? '✓ Available' : '✗ Missing');
     console.log('Post ID:', postId);
     console.log('Comment ID:', commentId);
     
-    const url = `https://graph.facebook.com/v18.0/${commentId}?access_token=${process.env.FACEBOOK_TOKEN}`;
+    const url = `https://graph.facebook.com/v21.0/${commentId}?access_token=${process.env.FACEBOOK_TOKEN}`;
     console.log('Sending request to Facebook API...');
     
     const response = await fetch(
