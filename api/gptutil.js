@@ -18,7 +18,7 @@ export async function analyzeComment(comment) {
     console.log('Analyzing comment:', comment);
     
     const prompt = process.env.COMMENT_PROMPT || `
-      Analyze if this comment should be hidden. Consider:
+      Analyze if this comment of a Plant App's ads should be hidden. Consider:
       - Disrespectful messaging
       - Negative comment for PictureThis
       - Spam
@@ -27,6 +27,13 @@ export async function analyzeComment(comment) {
       
       Respond with exactly "hide" if the comment should be hidden, or "not_hide" if it's acceptable.
       strictly return "hide" or "not_hide"
+
+      E.g: The following are examples of comments which should be hidden:
+      1. Picturethis is a bad app
+      2. very inaccurate identification
+      3. It costs money. dont download it
+      4. terrible app
+      5. Do not waste your time      
     `;
 
     console.log('Sending request to OpenAI...');
