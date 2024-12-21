@@ -39,19 +39,20 @@ export function handleWebhookEvent(req, res) {
 
     // Iterates over each entry - there may be multiple if batched
     body.entry.forEach(function(entry) {
-      // Gets the body of the webhook event
-      const webhookEvent = entry.messaging[0];
-      console.log('Webhook event:', webhookEvent);
-
-      // Get the sender PSID
-      const senderPsid = webhookEvent.sender.id;
-      console.log('Sender PSID:', senderPsid);
-
-      // Handle different types of events
-      if (webhookEvent.message) {
-        handleMessage(senderPsid, webhookEvent.message);
-      } else if (webhookEvent.postback) {
-        handlePostback(senderPsid, webhookEvent.postback);
+      // Handle comments
+      if (entry.changes) {
+        entry.changes.forEach(change => {
+          if (change.value.item === 'comment') {
+            console.log('New comment received:');
+            console.log('Post ID:', change.value.post_id);
+            console.log('Comment ID:', change.value.comment_id);
+            console.log('Comment message:', change.value.message);
+            console.log('Commenter:', change.value.from);
+            console.log('Created time:', change.value.created_time);
+            
+            handleComment(change.value);
+          }
+        });
       }
     });
   } else {
@@ -60,14 +61,12 @@ export function handleWebhookEvent(req, res) {
   }
 }
 
-function handleMessage(senderPsid, receivedMessage) {
-  // Add your message handling logic here
-  console.log('Handling message:', receivedMessage);
-  // Implement your message handling logic
-}
-
-function handlePostback(senderPsid, receivedPostback) {
-  // Add your postback handling logic here
-  console.log('Handling postback:', receivedPostback);
-  // Implement your postback handling logic
+function handleComment(commentData) {
+  // You can add specific comment handling logic here
+  console.log('Processing comment:', {
+    message: commentData.message,
+    commenterId: commentData.from.id,
+    commenterName: commentData.from.name,
+    verb: commentData.verb // 'add', 'edit', or 'delete'
+  });
 } 
