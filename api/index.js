@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { handleWebhookVerification, handleWebhookEvent } from '../src/webhookHandler.js';
+import { handleWebhookVerification, handleWebhookEvent } from './webhookHandler.js';
 
 dotenv.config();
 
