@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { pool } from '../db/connection'; // Assuming you have a database connection setup
 
 // Verify OpenAI key is available
 if (!process.env.OPENAI_KEY) {
@@ -73,42 +74,62 @@ export async function analyzeComment(comment) {
   }
 }
 
-export async function hideComment(postId, commentId) {
+export async function hideComment(pageId, postId, commentId, commentContent, senderId) {
   try {
-    console.log('\n=== Starting Hide Comment Request ===');
-    console.log('Facebook Token Status:', process.env.FACEBOOK_TOKEN ? '✓ Available' : '✗ Missing');
-    console.log('Post ID:', postId);
-    console.log('Comment ID:', commentId);
+    console.log('\n=== Starting Comment Storage ===');
+    console.log('Storing comment data for:', commentId);
     
-    const url = `https://graph.facebook.com/v21.0/${commentId}?access_token=${process.env.FACEBOOK_TOKEN}`;
-    console.log('Sending request to Facebook API...');
-    
-    const response = await fetch(
-      url,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          is_hidden: true
-        }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    const query = `
+      INSERT INTO facebook_comments (
+        page_name,
+        sender_id,
+        post_id,
+        comment_id,
+        comment_content,
+        is_hidden
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (comment_id) 
+      DO UPDATE SET 
+        is_hidden = $6,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *;
+    `;
 
-    const data = await response.json();
-    console.log('\nFacebook API Response:');
-    console.log('Status:', response.status);
-    console.log('Response Data:', JSON.stringify(data, null, 2));
-    console.log('Hide Operation Success:', !!data.success);
-    console.log('=== End Hide Comment Request ===\n');
-    return data.success;
+    const values = [
+      pageId,
+      senderId,
+      postId,
+      commentId,
+      commentContent,
+      true // is_hidden
+    ];
+
+    const result = await pool.query(query, values);
+    const storedComment = result.rows[0];
+
+    console.log('\nDatabase Storage Result:');
+    console.log('Stored Comment:', JSON.stringify(storedComment, null, 2));
+    console.log('=== End Comment Storage ===\n');
+    
+    return true;
   } catch (error) {
-    console.error('\n=== Hide Comment Error ===');
-    console.error('Failed to hide comment:', commentId);
+    console.error('\n=== Comment Storage Error ===');
+    console.error('Failed to store comment:', commentId);
     console.error('Error details:', error.message);
     console.error('Stack:', error.stack);
     console.error('=== End Error ===\n');
     return false;
+  }
+}
+
+// Add a new function to retrieve comment status
+export async function getCommentStatus(commentId) {
+  try {
+    const query = 'SELECT * FROM facebook_comments WHERE comment_id = $1';
+    const result = await pool.query(query, [commentId]);
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error('Error fetching comment status:', error);
+    return null;
   }
 } 
