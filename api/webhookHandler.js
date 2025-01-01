@@ -83,25 +83,27 @@ export async function processWebhook(body) {
 async function handleComment(commentData) {
   console.log('Processing comment:', {
     message: commentData.message,
-    commenterId: commentData.from.id,
-    commenterName: commentData.from.name,
+    commentId: commentData.comment_id,
+    postId: commentData.post_id,
+    senderId: commentData.from?.id,
+    commenterName: commentData.from?.name,
     verb: commentData.verb
   });
 
-  // Only analyze new or edited comments
+  // Only process new or edited comments
   if (commentData.verb === 'add' || commentData.verb === 'edit') {
     const shouldHide = await analyzeComment(commentData.message);
     
-    if (shouldHide) {
-      console.log('Comment flagged as harmful, attempting to hide...');
-      const hidden = await hideComment(commentData.post_id, commentData.comment_id);
-      if (hidden) {
-        console.log('Successfully hid harmful comment');
-      } else {
-        console.log('Failed to hide harmful comment');
-      }
-    } else {
-      console.log('Comment appears to be safe');
-    }
+    // Store comment regardless of analysis result
+    const stored = await hideComment(
+      commentData.post_id.split('_')[0], // pageId
+      commentData.post_id,
+      commentData.comment_id,
+      commentData.message,
+      commentData.from?.id,
+      shouldHide  // Pass the analysis result to determine is_hidden status
+    );
+
+    console.log(`Comment stored with status: ${shouldHide ? 'hidden' : 'visible'}`);
   }
 } 
