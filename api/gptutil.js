@@ -74,14 +74,16 @@ export async function analyzeComment(comment) {
   }
 }
 
-export async function hideComment(pageId, postId, commentId, commentContent, senderId) {
+export async function hideComment(pageId, postId, commentId, commentContent, senderId, isHidden = false) {
   try {
     console.log('\n=== Starting Comment Storage ===');
     console.log('Storing comment data:', {
       pageId,
       postId,
       commentId,
-      senderId
+      senderId,
+      isHidden,
+      commentContent
     });
     
     const query = `
@@ -95,7 +97,7 @@ export async function hideComment(pageId, postId, commentId, commentContent, sen
       ) VALUES ($1, $2, $3, $4, $5, $6)
       ON CONFLICT (comment_id) 
       DO UPDATE SET 
-        is_hidden = $6,
+        is_hidden = EXCLUDED.is_hidden,
         updated_at = CURRENT_TIMESTAMP
       RETURNING *;
     `;
@@ -106,7 +108,7 @@ export async function hideComment(pageId, postId, commentId, commentContent, sen
       postId,
       commentId,
       commentContent,
-      true // is_hidden
+      isHidden
     ];
 
     const result = await pool.query(query, values);
@@ -114,6 +116,12 @@ export async function hideComment(pageId, postId, commentId, commentContent, sen
 
     console.log('\nDatabase Storage Result:');
     console.log('Stored Comment:', JSON.stringify(storedComment, null, 2));
+    if (storedComment.is_hidden !== isHidden) {
+      console.warn('Warning: Stored hidden status does not match input value:', {
+        input: isHidden,
+        stored: storedComment.is_hidden
+      });
+    }
     console.log('=== End Comment Storage ===\n');
     
     return true;
