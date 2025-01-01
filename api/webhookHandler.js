@@ -52,28 +52,31 @@ export function handleWebhookEvent(req, res) {
   }
 }
 
-async function processWebhook(body) {
+export async function processWebhook(body) {
   try {
-    // Iterates over each entry - there may be multiple if batched
-    for (const entry of body.entry) {
-      // Handle comments
-      if (entry.changes) {
+    console.log('\n=== Facebook Webhook Data ===');
+    console.log('Raw webhook payload:', JSON.stringify(body, null, 2));
+
+    if (body.object === 'page') {
+      for (const entry of body.entry) {
+        console.log('\nProcessing entry:', JSON.stringify(entry, null, 2));
+        
         for (const change of entry.changes) {
           if (change.value.item === 'comment') {
-            console.log('New comment received:');
-            console.log('Post ID:', change.value.post_id);
-            console.log('Comment ID:', change.value.comment_id);
-            console.log('Comment message:', change.value.message);
-            console.log('Commenter:', change.value.from);
-            console.log('Created time:', change.value.created_time);
-            
+            console.log('\nComment data received:', JSON.stringify(change.value, null, 2));
             await handleComment(change.value);
           }
         }
       }
     }
+    
+    return true;
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    console.error('\n=== Webhook Processing Error ===');
+    console.error('Error details:', error);
+    console.error('Stack:', error.stack);
+    console.error('=== End Error ===\n');
+    return false;
   }
 }
 
