@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { pool } from '../db/connection'; // Assuming you have a database connection setup
+import { pool } from '../db/connection.js'; // Added .js extension
 
 // Verify OpenAI key is available
 if (!process.env.OPENAI_KEY) {
