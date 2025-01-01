@@ -77,7 +77,12 @@ export async function analyzeComment(comment) {
 export async function hideComment(pageId, postId, commentId, commentContent, senderId) {
   try {
     console.log('\n=== Starting Comment Storage ===');
-    console.log('Storing comment data for:', commentId);
+    console.log('Storing comment data:', {
+      pageId,
+      postId,
+      commentId,
+      senderId
+    });
     
     const query = `
       INSERT INTO facebook_comments (

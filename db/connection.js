@@ -7,9 +7,10 @@ export const pool = new Pool({
   database: process.env.POSTGRES_DATABASE,
   password: process.env.POSTGRES_PASSWORD,
   port: process.env.POSTGRES_PORT || 5432,
-  ssl: process.env.POSTGRES_SSL === 'true' ? {
-    rejectUnauthorized: false
-  } : undefined
+  ssl: {
+    rejectUnauthorized: false,
+    sslmode: 'require'
+  }
 });
 
 // Test the connection
