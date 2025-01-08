@@ -87,7 +87,7 @@ export async function analyzeComment(comment) {
     console.log('\nGPT Analysis Complete:');
     console.log('Raw Response:', completion.choices[0].message.content);
     console.log('Processed Decision:', decision);
-    console.log('Will Hide:', decision === 'hide');
+    console.log('Should Hide:', decision === 'hide');
     console.log('=== End GPT Analysis ===\n');
     return decision === 'hide';
   } catch (error) {
@@ -107,7 +107,7 @@ export async function analyzeComment(comment) {
 }
 
 // Modify the hideComment function to handle null comment content
-export async function hideComment(pageId, postId, commentId, commentContent, senderId, isHidden = false) {
+export async function hideComment(pageId, postId, commentId, commentContent, senderId, shouldBeHidden = false) {
   try {
     console.log('\n=== Starting Comment Processing ===');
     
@@ -119,16 +119,16 @@ export async function hideComment(pageId, postId, commentId, commentContent, sen
     // Skip processing if comment content is empty/null
     if (!commentContent || commentContent.trim() === '') {
       console.log('Skipping empty comment:', commentId);
-      return true; // Return true to indicate successful processing (by skipping)
+      return true;
     }
     
-    // If comment should be hidden, hide it on Facebook first
-    let facebookHideSuccess = true;
-    if (isHidden) {
+    // Try to hide on Facebook if GPT suggests hiding
+    let isHidden = false;
+    if (shouldBeHidden) {
       console.log('Attempting to hide comment on Facebook:', commentId);
-      facebookHideSuccess = await hideCommentOnFacebook(commentId);
+      isHidden = await hideCommentOnFacebook(commentId);
       
-      if (!facebookHideSuccess) {
+      if (!isHidden) {
         console.error('Failed to hide comment on Facebook, but will continue with database storage');
       }
     }
@@ -139,6 +139,7 @@ export async function hideComment(pageId, postId, commentId, commentContent, sen
       postId,
       commentId,
       senderId,
+      shouldBeHidden,
       isHidden,
       commentContent
     });
@@ -150,13 +151,13 @@ export async function hideComment(pageId, postId, commentId, commentContent, sen
         post_id,
         comment_id,
         comment_content,
-        is_hidden,
-        hide_success
+        should_be_hidden,
+        is_hidden
       ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       ON CONFLICT (comment_id) 
       DO UPDATE SET 
+        should_be_hidden = EXCLUDED.should_be_hidden,
         is_hidden = EXCLUDED.is_hidden,
-        hide_success = EXCLUDED.hide_success,
         updated_at = CURRENT_TIMESTAMP
       RETURNING *;
     `;
@@ -167,8 +168,8 @@ export async function hideComment(pageId, postId, commentId, commentContent, sen
       postId,
       commentId,
       commentContent,
-      isHidden,
-      isHidden ? facebookHideSuccess : null
+      shouldBeHidden,
+      isHidden
     ];
 
     const result = await pool.query(query, values);
@@ -176,15 +177,9 @@ export async function hideComment(pageId, postId, commentId, commentContent, sen
 
     console.log('\nDatabase Storage Result:');
     console.log('Stored Comment:', JSON.stringify(storedComment, null, 2));
-    if (storedComment.is_hidden !== isHidden) {
-      console.warn('Warning: Stored hidden status does not match input value:', {
-        input: isHidden,
-        stored: storedComment.is_hidden
-      });
-    }
     console.log('=== End Comment Storage ===\n');
     
-    return facebookHideSuccess;
+    return isHidden;
   } catch (error) {
     console.error('\n=== Comment Processing Error ===');
     console.error('Failed to process comment:', commentId);
