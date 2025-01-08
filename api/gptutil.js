@@ -100,7 +100,7 @@ export async function analyzeComment(comment) {
         data: error.response.data
       });
     }
-    console.error('Stack:', error.stack);
+    console.error('Stack :', error.stack);
     console.error('=== End Error ===\n');
     return false; // Default to not hiding on error
   }
