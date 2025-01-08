@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
-import { pool } from '../db/connection.js'; // Added .js extension
+import axios from 'axios';
+import { pool } from '../db/connection.js';
 
 // Verify OpenAI key is available
 if (!process.env.OPENAI_KEY) {
@@ -11,6 +12,97 @@ if (!process.env.OPENAI_KEY) {
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY
 });
+
+async function hideCommentOnFacebook(commentId) {
+  try {
+    const response = await axios.post(
+      `https://graph.facebook.com/v18.0/${commentId}?access_token=${process.env.FACEBOOK_TOKEN}`,
+      { is_hidden: true }
+    );
+    return response.status === 200;
+  } catch (error) {
+    console.error('Facebook API Error:', error.response?.data || error.message);
+    return false;
+  }
+}
+
+export async function hideComment(pageId, postId, commentId, commentContent, senderId, shouldBeHidden = false) {
+  try {
+    console.log('\n=== Starting Comment Storage ===');
+    console.log('Storing comment data:', {
+      pageId,
+      postId,
+      commentId,
+      senderId,
+      shouldBeHidden,
+      commentContent
+    });
+    
+    // Try to hide on Facebook if GPT suggests hiding
+    let isActuallyHidden = false;
+    if (shouldBeHidden) {
+      console.log('Attempting to hide comment on Facebook...');
+      isActuallyHidden = await hideCommentOnFacebook(commentId);
+      console.log('Facebook hide result:', isActuallyHidden);
+    }
+
+    const query = `
+      INSERT INTO facebook_comments (
+        page_name,
+        sender_id,
+        post_id,
+        comment_id,
+        comment_content,
+        should_be_hidden,
+        is_hidden
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (comment_id) 
+      DO UPDATE SET 
+        should_be_hidden = EXCLUDED.should_be_hidden,
+        is_hidden = EXCLUDED.is_hidden,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *;
+    `;
+
+    const values = [
+      pageId,
+      senderId,
+      postId,
+      commentId,
+      commentContent,
+      shouldBeHidden,  // GPT's suggestion
+      isActuallyHidden // Actual Facebook API result
+    ];
+
+    const result = await pool.query(query, values);
+    const storedComment = result.rows[0];
+
+    console.log('\nDatabase Storage Result:');
+    console.log('Stored Comment:', JSON.stringify(storedComment, null, 2));
+    if (storedComment.should_be_hidden !== shouldBeHidden || storedComment.is_hidden !== isActuallyHidden) {
+      console.warn('Warning: Stored status mismatch:', {
+        shouldBeHidden: {
+          input: shouldBeHidden,
+          stored: storedComment.should_be_hidden
+        },
+        isHidden: {
+          input: isActuallyHidden,
+          stored: storedComment.is_hidden
+        }
+      });
+    }
+    console.log('=== End Comment Storage ===\n');
+    
+    return true;
+  } catch (error) {
+    console.error('\n=== Comment Storage Error ===');
+    console.error('Failed to store comment:', commentId);
+    console.error('Error details:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('=== End Error ===\n');
+    return false;
+  }
+}
 
 export async function analyzeComment(comment) {
   try {
@@ -71,67 +163,6 @@ export async function analyzeComment(comment) {
     console.error('Stack:', error.stack);
     console.error('=== End Error ===\n');
     return false; // Default to not hiding on error
-  }
-}
-
-export async function hideComment(pageId, postId, commentId, commentContent, senderId, isHidden = false) {
-  try {
-    console.log('\n=== Starting Comment Storage ===');
-    console.log('Storing comment data:', {
-      pageId,
-      postId,
-      commentId,
-      senderId,
-      isHidden,
-      commentContent
-    });
-    
-    const query = `
-      INSERT INTO facebook_comments (
-        page_name,
-        sender_id,
-        post_id,
-        comment_id,
-        comment_content,
-        is_hidden
-      ) VALUES ($1, $2, $3, $4, $5, $6)
-      ON CONFLICT (comment_id) 
-      DO UPDATE SET 
-        is_hidden = EXCLUDED.is_hidden,
-        updated_at = CURRENT_TIMESTAMP
-      RETURNING *;
-    `;
-
-    const values = [
-      pageId,
-      senderId,
-      postId,
-      commentId,
-      commentContent,
-      isHidden
-    ];
-
-    const result = await pool.query(query, values);
-    const storedComment = result.rows[0];
-
-    console.log('\nDatabase Storage Result:');
-    console.log('Stored Comment:', JSON.stringify(storedComment, null, 2));
-    if (storedComment.is_hidden !== isHidden) {
-      console.warn('Warning: Stored hidden status does not match input value:', {
-        input: isHidden,
-        stored: storedComment.is_hidden
-      });
-    }
-    console.log('=== End Comment Storage ===\n');
-    
-    return true;
-  } catch (error) {
-    console.error('\n=== Comment Storage Error ===');
-    console.error('Failed to store comment:', commentId);
-    console.error('Error details:', error.message);
-    console.error('Stack:', error.stack);
-    console.error('=== End Error ===\n');
-    return false;
   }
 }
 
