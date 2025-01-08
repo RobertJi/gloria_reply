@@ -8,7 +8,7 @@ import { handleWebhookVerification, handleWebhookEvent } from './webhookHandler.
 dotenv.config();
 
 // Log environment variables (but mask sensitive data)
-console.log('\n=== Environment Variables ===');
+console.log('\n=== Environment Variables Check ===');
 console.log('PORT:', process.env.PORT);
 console.log('FACEBOOK_VERIFY_TOKEN:', process.env.FACEBOOK_VERIFY_TOKEN ? '✓ Set' : '✗ Not Set');
 console.log('FACEBOOK_ACCESS_TOKEN:', process.env.FACEBOOK_ACCESS_TOKEN ? '✓ Set' : '✗ Not Set');
