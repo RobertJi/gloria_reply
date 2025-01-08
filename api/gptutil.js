@@ -13,14 +13,14 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY
 });
 
-// Add Facebook API configuration
+// Update Facebook API configuration check
 if (!process.env.FACEBOOK_ACCESS_TOKEN) {
   console.error('\n=== Environment Error ===');
   console.error('FACEBOOK_ACCESS_TOKEN is not set in environment variables');
   console.error('=== End Error ===\n');
 }
 
-// Add function to hide comment on Facebook
+// Update hideCommentOnFacebook function to use the new token name
 async function hideCommentOnFacebook(commentId) {
   try {
     const response = await axios.post(

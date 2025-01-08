@@ -11,7 +11,7 @@ dotenv.config();
 console.log('\n=== Environment Variables ===');
 console.log('PORT:', process.env.PORT);
 console.log('FACEBOOK_VERIFY_TOKEN:', process.env.FACEBOOK_VERIFY_TOKEN ? '✓ Set' : '✗ Not Set');
-console.log('FACEBOOK_TOKEN:', process.env.FACEBOOK_TOKEN ? '✓ Set' : '✗ Not Set');
+console.log('FACEBOOK_ACCESS_TOKEN:', process.env.FACEBOOK_ACCESS_TOKEN ? '✓ Set' : '✗ Not Set');
 console.log('OPENAI_KEY:', process.env.OPENAI_KEY ? '✓ Set' : '✗ Not Set');
 console.log('COMMENT_PROMPT:', process.env.COMMENT_PROMPT ? '✓ Set' : '✗ Not Set');
 console.log('=== End Environment Variables ===\n');
